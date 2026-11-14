@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Socoteala</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column on phones; on wide screens a form column (left) and a results column (right). */
+:root {
+  --bg: #f2f5f4;
+  --surface: #ffffff;
+  --ink: #12201c;
+  --muted: #55645f;
+  --line: #d9e1de;
+  --accent: #0a6a56;
+  --accent-ink: #ffffff;
+  --accent-soft: #dff0eb;
+  --owed: #0a6a56;
+  --owe: #b23a24;
+  --owe-soft: #f7e4df;
+  --focus: #1b6fe0;
+  --font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r: 10px;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1613; --surface: #16211d; --ink: #e8f1ee; --muted: #9db0aa; --line: #27362f;
+    --accent: #4fcfae; --accent-ink: #06231b; --accent-soft: #17352c;
+    --owed: #4fcfae; --owe: #f08a74; --owe-soft: #3a211b; --focus: #7db4ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1613; --surface: #16211d; --ink: #e8f1ee; --muted: #9db0aa; --line: #27362f;
+  --accent: #4fcfae; --accent-ink: #06231b; --accent-soft: #17352c;
+  --owed: #4fcfae; --owe: #f08a74; --owe-soft: #3a211b; --focus: #7db4ff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45; padding-left: var(--gutter-l); padding-right: var(--gutter-r); padding-block: 0 48px; }
+.app { max-width: 980px; margin: 0 auto; }
+h1, h2, h3, p { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px 14px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand svg { flex: none; }
+.brand b { font-size: 1.25rem; letter-spacing: -.01em; }
+.brand span { display: block; font-size: .85rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand > div { min-width: 0; }
+.link-btn { white-space: nowrap; flex: none; background: none; border: 1px solid var(--line); border-radius: var(--r); min-height: 44px; padding: 0 14px; color: var(--muted); cursor: pointer; }
+.link-btn:hover { color: var(--ink); border-color: var(--muted); }
+
+.grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 840px) { .grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); } }
+.col { display: contents; }
+.grid > .col > section { min-width: 0; }
+#s-sum { order: 1; } #s-pay { order: 2; } #s-add { order: 3; } #s-ppl { order: 5; } #s-his { order: 4; }
+@media (min-width: 840px) {
+  .col { display: grid; gap: 16px; min-width: 0; }
+  #s-sum, #s-pay, #s-add, #s-ppl, #s-his { order: 0; }
+}
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; min-width: 0; }
+.card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+.label { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+
+.total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.total strong { font-size: 2.1rem; letter-spacing: -.02em; line-height: 1.1; }
+.total small { color: var(--muted); }
+.bals { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+.bal { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) 6.5rem; align-items: center; gap: 10px; }
+.bal .who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.bal .amt { text-align: right; font-weight: 600; }
+.track { position: relative; height: 10px; background: var(--bg); border-radius: 99px; }
+.track::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--muted); opacity: .5; }
+.fill { position: absolute; top: 0; bottom: 0; border-radius: 99px; }
+.pos { color: var(--owed); } .neg { color: var(--owe); }
+
+.pay-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pay { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: var(--r); background: var(--owe-soft); }
+.pay p { min-width: 0; }
+.pay .btn { min-height: 44px; }
+.zero { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: var(--r); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+form { display: grid; gap: 14px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > span, fieldset legend { font-size: .85rem; font-weight: 600; color: var(--muted); padding: 0; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.row2 { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+input[type="text"], input[type="number"], select { width: 100%; min-height: 46px; padding: 0 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); }
+input::placeholder { color: var(--muted); opacity: .8; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; }
+.chip input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.chip span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: 99px; background: var(--bg); font-weight: 600; }
+.chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.btn { min-height: 48px; padding: 0 20px; border-radius: var(--r); border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; cursor: pointer; }
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(1px); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.msg { min-height: 1.3em; font-size: .9rem; color: var(--muted); }
+.msg.err { color: var(--owe); font-weight: 600; }
+
+.hist { list-style: none; margin: 0; padding: 0; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; padding-top: 0; }
+.item .t { font-weight: 600; overflow-wrap: anywhere; }
+.item .s { grid-column: 1; color: var(--muted); font-size: .88rem; }
+.item .v { font-weight: 700; text-align: right; }
+.item .x { grid-row: 1 / span 2; grid-column: 3; width: 44px; height: 44px; border-radius: var(--r); border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 1.3rem; line-height: 1; }
+.item .x:hover { color: var(--owe); background: var(--owe-soft); }
+.item .v { grid-row: 1 / span 2; grid-column: 2; }
+.item.is-pay .t { color: var(--accent); }
+.empty { color: var(--muted); padding: 8px 0; }
+.add-person { display: flex; gap: 8px; margin-top: 12px; }
+.add-person input { flex: 1; min-width: 0; }
+.add-person .btn { min-height: 46px; }
+.foot { margin-top: 24px; color: var(--muted); font-size: .85rem; }
+@media (prefers-reduced-motion: no-preference) { .fill { transition: width .25s ease-out, left .25s ease-out; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" role="img" aria-label="Socoteala"><rect width="34" height="34" rx="9" fill="var(--accent)"/><circle cx="13" cy="17" r="6.5" fill="none" stroke="var(--accent-ink)" stroke-width="2.4"/><circle cx="21" cy="17" r="6.5" fill="none" stroke="var(--accent-ink)" stroke-width="2.4"/></svg>
+      <div><b>Socoteala</b><span id="grp">Apartament Drumul Taberei · 3 colegi</span></div>
+    </div>
+    <button class="link-btn" type="button" id="reset">Date de test</button>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card" id="s-add" aria-labelledby="h-add">
+        <h2 id="h-add">Adaugă o cheltuială</h2>
+        <form id="f" novalidate>
+          <fieldset>
+            <legend>Cine a plătit</legend>
+            <div class="chips" id="payer" role="radiogroup" aria-label="Cine a plătit"></div>
+          </fieldset>
+          <div class="row2">
+            <label class="field"><span>Sumă (lei)</span><input id="amt" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. 45,50"></label>
+            <label class="field"><span>Categorie</span>
+              <select id="cat"><option>Utilități</option><option>Mâncare</option><option>Chirie</option><option>Casă</option><option>Altele</option></select></label>
+          </div>
+          <label class="field"><span>Pentru ce</span><input id="desc" type="text" maxlength="60" autocomplete="off" placeholder="ex. Detergent"></label>
+          <fieldset>
+            <legend>Împărțit între</legend>
+            <div class="chips" id="split"></div>
+          </fieldset>
+          <button class="btn" type="submit">Adaugă cheltuiala</button>
+          <p class="msg" id="msg" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <section class="card" id="s-ppl" aria-labelledby="h-ppl">
+        <h2 id="h-ppl">Colegi</h2>
+        <p class="empty" id="pplTxt"></p>
+        <form class="add-person" id="fp" novalidate>
+          <input id="pname" type="text" maxlength="14" autocomplete="off" placeholder="Prenume" aria-label="Prenume coleg nou">
+          <button class="btn ghost" type="submit">Adaugă</button>
+        </form>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card" id="s-sum" aria-labelledby="h-sum">
+        <h2 id="h-sum">Situația grupului</h2>
+        <div class="total"><strong class="num" id="tot">0,00 lei</strong><small id="totN"></small></div>
+        <ul class="bals" id="bals"></ul>
+      </section>
+      <section class="card" id="s-pay" aria-labelledby="h-pay">
+        <h2 id="h-pay">Cine datorează cui</h2>
+        <ul class="pay-list" id="pays"></ul>
+      </section>
+      <section class="card" id="s-his" aria-labelledby="h-his">
+        <h2 id="h-his">Istoric</h2>
+        <ul class="hist" id="hist"></ul>
+      </section>
+    </div>
+  </div>
+  <p class="foot">Date fictive, salvate doar în acest browser. Sumele sunt calculate în bani întregi, fără rotunjiri care pierd un ban.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "socoteala-demo-v1";
+  var MONTHS = ["ian", "feb", "mar", "apr", "mai", "iun", "iul", "aug", "sep", "oct", "nov", "dec"];
+  function sample() {
+    return {
+      next: 4,
+      people: ["Ana", "Bogdan", "Cris"],
+      items: [
+        { id: 1, t: "e", by: "Ana", a: 12000, d: "Curent", c: "Utilități", dt: "2026-11-02", sp: ["Ana", "Bogdan", "Cris"] },
+        { id: 2, t: "e", by: "Bogdan", a: 6000, d: "Internet", c: "Utilități", dt: "2026-11-05", sp: ["Ana", "Bogdan", "Cris"] },
+        { id: 3, t: "e", by: "Cris", a: 9000, d: "Cumpărături", c: "Mâncare", dt: "2026-11-09", sp: ["Ana", "Bogdan", "Cris"] }
+      ]
+    };
+  }
+  var S = load();
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var o = JSON.parse(raw); if (o && o.people && o.items && o.people.length) return o; }
+    } catch (e) {}
+    return sample();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function lei(b) {
+    var neg = b < 0; b = Math.abs(b);
+    var whole = String(Math.floor(b / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return (neg ? "−" : "") + whole + "," + ("0" + (b % 100)).slice(-2) + " lei";
+  }
+  function fmtDate(iso) { var p = iso.split("-"); return +p[2] + " " + MONTHS[+p[1] - 1]; }
+  function today() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+
+  /* money logic: integer bani, remainder spread so the shares always add up */
+  function balances() {
+    var bal = {};
+    S.people.forEach(function (p) { bal[p] = 0; });
+    var total = 0;
+    S.items.forEach(function (it) {
+      if (it.t === "p") { bal[it.from] += it.a; bal[it.to] -= it.a; return; }
+      total += it.a;
+      var n = it.sp.length, base = Math.floor(it.a / n), rem = it.a - base * n;
+      it.sp.forEach(function (p, i) { bal[p] -= base + (((i + it.id) % n) < rem ? 1 : 0); });
+      bal[it.by] += it.a;
+    });
+    return { bal: bal, total: total };
+  }
+  function settle(bal) {
+    var cr = [], db = [], out = [];
+    S.people.forEach(function (p) { if (bal[p] > 0) cr.push([p, bal[p]]); else if (bal[p] < 0) db.push([p, -bal[p]]); });
+    while (cr.length && db.length) {
+      cr.sort(function (a, b) { return b[1] - a[1]; }); db.sort(function (a, b) { return b[1] - a[1]; });
+      var m = Math.min(cr[0][1], db[0][1]);
+      out.push({ from: db[0][0], to: cr[0][0], a: m });
+      cr[0][1] -= m; db[0][1] -= m;
+      if (!cr[0][1]) cr.shift();
+      if (db.length && !db[0][1]) db.shift();
+    }
+    return out;
+  }
+
+  function chips(host, name, type, checkedFn) {
+    host.innerHTML = S.people.map(function (p, i) {
+      return '<label class="chip"><input type="' + type + '" name="' + name + '" value="' + esc(p) + '"' + (checkedFn(p, i) ? " checked" : "") + '><span>' + esc(p) + "</span></label>";
+    }).join("");
+  }
+  function keepChecked(host, name) { return Array.prototype.map.call(host.querySelectorAll("input:checked"), function (i) { return i.value; }); }
+
+  function draw(keepForm) {
+    var prevPayer = keepForm ? keepChecked($("payer"), "payer")[0] : null;
+    var prevSplit = keepForm ? keepChecked($("split"), "split") : null;
+    chips($("payer"), "payer", "radio", function (p, i) { return prevPayer ? p === prevPayer : i === 0; });
+    chips($("split"), "split", "checkbox", function (p) { return prevSplit ? prevSplit.indexOf(p) > -1 : true; });
+    var r = balances(), max = 1;
+    S.people.forEach(function (p) { max = Math.max(max, Math.abs(r.bal[p])); });
+    $("tot").textContent = lei(r.total);
+    var n = S.items.filter(function (i) { return i.t === "e"; }).length;
+    $("totN").textContent = n + (n === 1 ? " cheltuială" : " cheltuieli");
+    $("grp").textContent = "Apartament Drumul Taberei · " + S.people.length + " colegi";
+    $("bals").innerHTML = S.people.map(function (p) {
+      var b = r.bal[p], w = Math.round(Math.abs(b) / max * 50), cls = b > 0 ? "pos" : b < 0 ? "neg" : "";
+      var fill = b === 0 ? "" : '<i class="fill" style="background:var(--' + (b > 0 ? "owed" : "owe") + ");width:" + w + "%;" + (b > 0 ? "left:50%" : "left:" + (50 - w) + "%") + '"></i>';
+      return '<li class="bal"><span class="who">' + esc(p) + '</span><span class="track" aria-hidden="true">' + fill + '</span><span class="amt num ' + cls + '">' + (b > 0 ? "+" : "") + lei(b) + "</span></li>";
+    }).join("");
+    var pays = settle(r.bal);
+    $("pays").innerHTML = pays.length ? pays.map(function (x, i) {
+      return '<li class="pay"><p><b>' + esc(x.from) + "</b> datorează lui <b>" + esc(x.to) + '</b> <span class="num">' + lei(x.a) + '</span></p><button class="btn ghost" type="button" data-pay="' + i + '">Marchează achitat</button></li>';
+    }).join("") : '<li class="zero">Toți sunt la zi.</li>';
+    $("pays")._p = pays;
+    var items = S.items.slice().sort(function (a, b) { return a.dt < b.dt ? 1 : a.dt > b.dt ? -1 : b.id - a.id; });
+    $("hist").innerHTML = items.length ? items.map(function (it) {
+      if (it.t === "p") return '<li class="item is-pay"><span class="t">' + esc(it.from) + " i-a achitat lui " + esc(it.to) + '</span><span class="s">' + fmtDate(it.dt) + ' · Achitare</span><span class="v num">' + lei(it.a) + '</span><button class="x" type="button" data-del="' + it.id + '" aria-label="Șterge achitarea">×</button></li>';
+      var who = it.sp.length === S.people.length ? "toți" : it.sp.join(", ");
+      return '<li class="item"><span class="t">' + esc(it.d) + '</span><span class="s">' + esc(it.by) + " a plătit · " + fmtDate(it.dt) + " · " + esc(it.c) + " · între " + esc(who) + '</span><span class="v num">' + lei(it.a) + '</span><button class="x" type="button" data-del="' + it.id + '" aria-label="Șterge cheltuiala ' + esc(it.d) + '">×</button></li>';
+    }).join("") : '<li class="empty">Nicio cheltuială încă. Adaugă prima din formular.</li>';
+    $("pplTxt").textContent = S.people.join(", ") + ".";
+  }
+  function say(t, err) { var m = $("msg"); m.textContent = t; m.className = "msg" + (err ? " err" : ""); }
+
+  function parseAmt(s) {
+    s = String(s).replace(/lei|ron/i, "").replace(/\s/g, "");
+    if (!/^\d+([.,]\d{1,2})?$/.test(s)) return null;
+    var b = Math.round(parseFloat(s.replace(",", ".")) * 100);
+    return b > 0 && b <= 10000000 ? b : null;
+  }
+  $("f").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var by = keepChecked($("payer"), "payer")[0], a = parseAmt($("amt").value), sp = keepChecked($("split"), "split");
+    if (!by) return say("Alege cine a plătit.", true);
+    if (a === null) return say("Scrie o sumă între 0,01 și 100.000 lei, de exemplu 45,50.", true);
+    if (!sp.length) return say("Alege cel puțin o persoană între care se împarte.", true);
+    S.items.push({ id: S.next++, t: "e", by: by, a: a, d: $("desc").value.trim() || "Cheltuială", c: $("cat").value, dt: today(), sp: S.people.filter(function (p) { return sp.indexOf(p) > -1; }) });
+    save(); $("amt").value = ""; $("desc").value = ""; draw(true);
+    say("Adăugat: " + lei(a) + " plătiți de " + by + ".");
+    $("amt").focus();
+  });
+  $("fp").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var n = $("pname").value.trim().replace(/\s+/g, " ");
+    if (!n) return;
+    if (S.people.length >= 6) return say("Un grup poate avea cel mult 6 colegi.", true);
+    if (S.people.some(function (p) { return p.toLowerCase() === n.toLowerCase(); })) return say(n + " este deja în grup.", true);
+    S.people.push(n); save(); $("pname").value = ""; draw(true); say(n + " a fost adăugat. Cheltuielile vechi rămân împărțite între colegii de atunci.");
+  });
+  $("pays").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-pay]"); if (!b) return;
+    var x = $("pays")._p[+b.getAttribute("data-pay")]; if (!x) return;
+    S.items.push({ id: S.next++, t: "p", from: x.from, to: x.to, a: x.a, dt: today() });
+    save(); draw(true); say(x.from + " i-a achitat lui " + x.to + " " + lei(x.a) + ".");
+  });
+  $("hist").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-del]"); if (!b) return;
+    var id = +b.getAttribute("data-del");
+    S.items = S.items.filter(function (i) { return i.id !== id; });
+    save(); draw(true); say("Șters.");
+  });
+  $("reset").addEventListener("click", function () { S = sample(); save(); draw(false); say("Date de test restaurate: 3 colegi, 3 cheltuieli."); });
+  draw(false);
+})();
+</script>
+
+</body>
+</html>
