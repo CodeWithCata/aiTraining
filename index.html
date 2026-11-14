@@ -1063,11 +1063,12 @@ and anything I cannot prove in the live demo.</pre></div>
 <section id="prompturi">
   <div class="wrap" style="max-width:860px">
     <h2>Constructor de prompturi</h2>
-    <p class="lede">Alegi pentru cine e promptul, scrii ce vrei, copiezi și lipești în Gemini. Gemini îl face prompt complet pentru AI-ul ales.</p>
+    <p class="lede">Alegi ce lucru de predat faci, scrii o singură dată tema și aplicația, copiezi și lipești în Gemini. Gemini îl face prompt complet pentru AI-ul potrivit.</p>
     <div class="builder">
       <form id="pForm" onsubmit="return false">
-        <div class="field"><span>Promptul final e pentru <small>AI-ul care îl primește</small></span><div class="chips" id="pTarget" role="group" aria-label="Pentru cine e promptul"><button type="button" class="chip" aria-pressed="true" data-t="Claude">Claude</button><button type="button" class="chip" aria-pressed="false" data-t="ChatGPT">ChatGPT</button><button type="button" class="chip" aria-pressed="false" data-t="Google Flow">Google Flow</button></div></div>
-        <label class="field"><span>Ce vrei? <small>scrie tot, în orice limbă, cum îți vine</small></span><textarea data-k="REQUEST" rows="7" placeholder="Ex: avem o aplicație pentru elevi care caută săli libere la școală. Vreau 3 ecrane de telefon, fără login, de făcut în 3 ore. Să arate fiecare ecran și ce face."></textarea></label>
+        <div class="field"><span>Ce lucru de predat faci? <small>alegi unul, restul se completează singur</small></span><div class="chips" id="pDeliv" role="group" aria-label="Lucrul de predat"><button type="button" class="chip" aria-pressed="true" data-d="app">Aplicația</button><button type="button" class="chip" aria-pressed="false" data-d="strategie">Strategia</button><button type="button" class="chip" aria-pressed="false" data-d="model">Modelul financiar</button><button type="button" class="chip" aria-pressed="false" data-d="promo">Afiș / postare</button><button type="button" class="chip" aria-pressed="false" data-d="jurnal">Jurnalul AI</button><button type="button" class="chip" aria-pressed="false" data-d="pitch">Pitch</button></div></div>
+        <div class="field"><span>Promptul final e pentru <small>se alege singur, îl poți schimba</small></span><div class="chips" id="pTarget" role="group" aria-label="Pentru cine e promptul"><button type="button" class="chip" aria-pressed="true" data-t="Claude">Claude</button><button type="button" class="chip" aria-pressed="false" data-t="ChatGPT">ChatGPT</button><button type="button" class="chip" aria-pressed="false" data-t="Google Flow">Google Flow</button></div></div>
+        <label class="field"><span>Tema și aplicația ta <small>scrii o singură dată, în orice limbă; la fiecare lucru de predat schimbi doar butonul de sus</small></span><textarea data-k="REQUEST" rows="7" placeholder="Ex: StudySpot: studenții caută și rezervă o sală de studiu liberă în campus. Căutare după oră și număr de persoane, fără login, date fictive, de făcut în 3 ore."></textarea></label>
       </form>
       <div class="out">
         <pre id="pOut" class="empty">Promptul tău apare aici.</pre>
@@ -1458,6 +1459,23 @@ and anything I cannot prove in the live demo.</pre></div>
     "ChatGPT": "It writes first drafts of text and makes images.",
     "Google Flow": "It makes images only. Describe the image: subject, style, colors, composition."
   };
+  var P_DELIV = "app";
+  var P_DELIVS = {
+    app: { t: "Claude", n: "web app (one index.html)", h: "Deliverable: the web app, as one complete self-contained index.html that works when opened directly, with a main flow that works end to end, demo data marked as demo, a mobile-first layout, no login and no database, plus a short numbered list of test steps." },
+    strategie: { t: "ChatGPT", n: "one-page strategy", h: "Deliverable: a one-page business strategy in Romanian (max 350 words, correct diacritics) with exactly these sections of 2 to 4 short lines each: Problema, Utilizatorul țintă, Soluția, Cum câștigăm bani, Piața și alternative (types of alternatives, no invented companies), Plan pentru primele 3 luni, Riscuri. Use only fictional or assumed numbers, mark each one as 'ipoteză', and never invent statistics or sources." },
+    model: { t: "ChatGPT", n: "financial model for Google Sheets", h: "Deliverable: a financial model for Google Sheets with one base scenario only. All assumptions go in a separate sheet named 'Ipoteze'; every number in the sheet 'Model' must be a formula that references 'Ipoteze', with ';' as the argument separator. It covers 12 months: customers or bookings, revenue, variable costs, fixed costs, profit, cumulative profit, and break-even = fixed costs / (price − variable cost). Output the Ipoteze table with cell references, the exact formulas of the first Model row so they can be copied down, the break-even cell, and 3 short steps to test that changing one assumption updates everything. Use fictional numbers only, marked 'ipoteză'." },
+    promo: { t: "Google Flow", n: "promo material (poster or post)", h: "Deliverable: promo material (a poster or social post). Give the text in Romanian with correct diacritics (a headline of max 6 words, a one-line tagline, a call to action) and a visual description (subject, style, colors, composition, format) that can be pasted into an image tool. Do not invent features, prices or statistics." },
+    jurnal: { t: "Claude", n: "AI log (max 1 page)", h: "Deliverable: the AI log, max 1 page, in Romanian, as a fill-in template with these sections: Unelte folosite (each tool and what it was used for), 3 prompturi folosite, 1 rezultat AI verificat și corectat (what the AI said, what was wrong, how the team corrected it), Resurse externe declarate (images, fonts, libraries, templates). Leave the real prompts and the real correction as clearly marked fields for the team to fill in; never invent them." },
+    pitch: { t: "Claude", n: "pitch of 5 slides + demo", h: "Deliverable: a 3-minute pitch of max 5 slides in Romanian: 1 Problema, 2 Soluția (with demo), 3 Cum câștigăm bani, 4 Planul, 5 Cum am folosit AI. For each slide give a short title, 2 to 3 bullets, what to say (about 35 seconds) and what to show. Add a box 'Instrucțiuni de testare' with 3 short steps for the jurors. Use only fictional or assumed numbers, marked 'ipoteză'." }
+  };
+  var P_DELIV_NOTE = " Base everything on the request below (the team's theme and app idea) and write any missing detail as a clearly marked assumption.";
+  function setDeliv(k) {
+    if (!P_DELIVS[k]) k = "app";
+    P_DELIV = k;
+    $$("#pDeliv .chip").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-d") === k ? "true" : "false"); });
+    setTarget(P_DELIVS[k].t);
+  }
+  $$("#pDeliv .chip").forEach(function (b) { b.addEventListener("click", function () { setDeliv(b.getAttribute("data-d")); }); });
   function setTarget(t) {
     if (!P_HINT[t]) t = "Claude";
     P_TARGET = t;
@@ -1470,11 +1488,11 @@ and anything I cannot prove in the live demo.</pre></div>
     var out = $("#pOut");
     var text = "";
     if (v && P_TARGET === "Google Flow") {
-      text = "You are a prompt engineer. Write ONE image prompt for Google Flow, which makes images only. Below is a rough request, in any language. Turn it into a single paragraph in English that describes: subject, style, colors, composition, lighting and aspect ratio. Do not ask for any text, letters, numbers or logos inside the image. Return ONLY that paragraph: no parts, no title, no notes, no assumptions and no explanation before or after it.\n\nFOR: Google Flow\nREQUEST: " + v;
+      text = "You are a prompt engineer. Write ONE image prompt for Google Flow, which makes images only." + (P_DELIV === "promo" ? " The image is a promotional poster or social post for the product described in the request." : "") + " Below is a rough request, in any language. Turn it into a single paragraph in English that describes: subject, style, colors, composition, lighting and aspect ratio. Do not ask for any text, letters, numbers or logos inside the image. Return ONLY that paragraph: no parts, no title, no notes, no assumptions and no explanation before or after it.\n\nFOR: Google Flow\nREQUEST: " + v;
       out.textContent = text; out.className = "";
     } else if (v) {
-      text = "You are a prompt engineer. Write ONE prompt for " + P_TARGET + ". " + P_HINT[P_TARGET] +
-        " Below is a rough request, in any language. Turn it into a complete prompt in English with these parts: ROLE, CONTEXT, TASK, CONSTRAINTS, FORMAT, ACCEPTANCE CRITERIA. Infer what is missing and keep it short. If you must assume something, write it inside the prompt itself (in CONTEXT or CONSTRAINTS). If the prompt needs data, say to use fictional data only. Return ONLY the prompt text, ready to paste into " + P_TARGET + ": no title, no notes, no assumptions and no explanation before or after it.\n\nFOR: " + P_TARGET + "\nREQUEST: " + v;
+      text = "You are a prompt engineer. Write ONE prompt for " + P_TARGET + ". " + (P_DELIV === "app" ? P_HINT[P_TARGET] + " " : "") + P_DELIVS[P_DELIV].h + P_DELIV_NOTE +
+        " Below is a rough request, in any language. Turn it into a complete prompt in English with these parts: ROLE, CONTEXT, TASK, CONSTRAINTS, FORMAT, ACCEPTANCE CRITERIA. Infer what is missing and keep it short. If you must assume something, write it inside the prompt itself (in CONTEXT or CONSTRAINTS). If the prompt needs data, say to use fictional data only. Return ONLY the prompt text, ready to paste into " + P_TARGET + ": no title, no notes, no assumptions and no explanation before or after it.\n\nFOR: " + P_TARGET + "\nDELIVERABLE: " + P_DELIVS[P_DELIV].n + "\nREQUEST: " + v;
       out.textContent = text; out.className = "";
     } else { out.textContent = "Promptul tău apare aici."; out.className = "empty"; }
     return text;
